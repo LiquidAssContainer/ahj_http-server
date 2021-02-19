@@ -108,16 +108,17 @@ app.use(async (ctx) => {
   }
 
   let requestBody = ctx.request.body;
-  if (requestBody) {
+  // проверка, не является ли объект пустым
+  if (Object.keys(requestBody).length) {
     try {
       requestBody = JSON.parse(requestBody);
     } catch (e) {
-      ctx.response.body = { success: false, message: 'Невалидный JSON' };
+      ctx.response.body = { success: false, message: 'Некорректный JSON' };
       return;
     }
   }
-  const { method } = ctx.request.query;
 
+  const { method } = ctx.request.query;
   switch (method) {
     case 'createTicket':
       if (!validateNewTicket(requestBody)) {
@@ -131,7 +132,7 @@ app.use(async (ctx) => {
       newTicket.created = new Date();
 
       tickets.push(newTicket);
-      ctx.response.body = { success: true, message: 'Тикет успешно добавлен' };
+      ctx.response.body = { success: true, message: 'Тикет успешно добавлен', obj: tickets };
       return;
 
     case 'removeTicket':
