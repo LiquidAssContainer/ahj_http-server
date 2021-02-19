@@ -107,7 +107,15 @@ app.use(async (ctx) => {
     return;
   }
 
-  const requestBody = JSON.parse(ctx.request.body);
+  let requestBody = ctx.request.body;
+  if (requestBody) {
+    try {
+      requestBody = JSON.parse(requestBody);
+    } catch (e) {
+      ctx.response.body = { success: false, message: 'Невалидный JSON' };
+      return;
+    }
+  }
   const { method } = ctx.request.query;
 
   switch (method) {
