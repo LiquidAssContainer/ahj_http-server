@@ -47,7 +47,7 @@ app.use(
   })
 );
 
-// app.use(serve('frontend'));
+app.use(serve('frontend'));
 
 // ↓ CORS // скопировано из репозитория Нетологии без изменений
 app.use(async (ctx, next) => {
