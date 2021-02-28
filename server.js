@@ -1,10 +1,7 @@
 const http = require('http');
 const Koa = require('koa');
 const koaBody = require('koa-body');
-// const path = require('path');
-// const fs = require('fs');
-// const koaStatic = require('koa-static');
-// const uuid = require('uuid');
+const serve = require('koa-static');
 
 const app = new Koa();
 
@@ -13,23 +10,30 @@ const tickets = [
   {
     id: 1,
     name: 'Отсортировать книги по высоте',
-    description: 'Переставить книги на книжной полке так, чтобы слева была самая высокая, а справа — самая низкая',
+    description: 'Переставить книги на книжной полке так, чтобы слева была самая высокая, а справа — самая низкая.',
     status: false,
-    created: new Date(2021, 1, 8),
+    created: new Date(2021, 1, 8, 16, 29),
   },
   {
     id: 2,
     name: 'Прогладить кота',
-    description: 'Найти кота, посадить к себе на колени или на диван и гладить хотя бы 10 минут',
+    description: 'Найти кота, посадить к себе на колени или на диван и гладить хотя бы 10 минут.',
     status: false,
-    created: new Date(2021, 1, 10),
+    created: new Date(2021, 1, 10, 11, 52),
   },
   {
     id: 3,
     name: 'Купить тапочницу',
-    description: 'Найти в ассортименте IKEA или другого магазина подходящую тапочницу и сделать заказ',
+    description: 'Найти в ассортименте IKEA или другого магазина подходящую тапочницу и сделать заказ.',
     status: false,
-    created: new Date(2021, 1, 11),
+    created: new Date(2021, 1, 11, 14, 01),
+  },
+  {
+    id: 4,
+    name: 'Купить печенье',
+    description: 'Купить хрустящее печенье с миндальной мукой и шоколадной крошкой. И СЪЕСТЬ.',
+    status: false,
+    created: new Date(2021, 1, 16, 19, 28),
   },
 ];
 
@@ -42,6 +46,8 @@ app.use(
     json: true,
   })
 );
+
+// app.use(serve('frontend'));
 
 // ↓ CORS // скопировано из репозитория Нетологии без изменений
 app.use(async (ctx, next) => {
@@ -85,8 +91,9 @@ app.use(async (ctx, next) => {
 
   switch (method) {
     case 'allTickets':
-      ctx.response.body = { success: true, data: tickets };
-      return await next();
+      const ticketsToSend = tickets.map(({ description, ...rest }) => rest); // крутая штука
+      ctx.response.body = { success: true, data: ticketsToSend };
+      return;
     case 'ticketById':
       const { id } = ctx.request.query;
       const ticket = tickets.find((elem) => elem.id == id);
@@ -95,10 +102,39 @@ app.use(async (ctx, next) => {
       } else {
         ctx.response.body = { success: false, message: 'Тикет с таким id отсутствует' };
       }
-      return await next();
-    // default:
-    //   ctx.response.status = 404;
-    //   return await next();
+      return;
+  }
+});
+
+app.use(async (ctx, next) => {
+  if (ctx.request.method !== 'PUT') {
+    return await next();
+  }
+
+  const { method } = ctx.request.query;
+  if (method === 'editTicket') {
+    const { id } = ctx.request.query;
+    const ticket = tickets.find((elem) => elem.id == id);
+
+    if (!ticket) {
+      ctx.response.body = { success: false, message: 'Тикет с таким id отсутствует' };
+      return;
+    }
+
+    let editedTicket;
+    try {
+      editedTicket = JSON.parse(ctx.request.body);
+    } catch (e) {
+      ctx.response.body = { success: false, message: 'Некорректный JSON' };
+      return;
+    }
+
+    for (const prop of ['name', 'description']) {
+      ticket[prop] = editedTicket[prop];
+    }
+
+    ctx.response.body = { success: true, data: ticket };
+    return;
   }
 });
 
@@ -132,7 +168,7 @@ app.use(async (ctx) => {
       newTicket.created = new Date();
 
       tickets.push(newTicket);
-      ctx.response.body = { success: true, message: 'Тикет успешно добавлен', obj: tickets };
+      ctx.response.body = { success: true, message: 'Тикет успешно добавлен', data: newTicket };
       return;
 
     case 'removeTicket':
