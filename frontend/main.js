@@ -4907,7 +4907,7 @@ var Fetch = /*#__PURE__*/function () {
   return Fetch;
 }();
 
-_defineProperty(Fetch, "url", 'https://ahj-http-server.herokuapp.com/server');
+_defineProperty(Fetch, "url", '/server');
 
 
 // EXTERNAL MODULE: ./node_modules/core-js/modules/es.array.filter.js
